@@ -1,0 +1,47 @@
+#include <Arduino.h>
+#include <Adafruit_AHTX0.h>
+#include <Wire.h>
+
+// Tworzymy dwa obiekty czujników   jedne podpinamy do 21 i 22 dgugi do 17 16
+Adafruit_AHTX0 aht1;
+Adafruit_AHTX0 aht2;
+
+// Definiujemy piny dla drugiej magistrali I2C
+#define I2C2_SCL 17
+#define I2C2_SDA 16
+
+void setup() {
+  Serial.begin(115200);
+
+  // Inicjalizacja pierwszej magistrali I2C (domyślna: piny 21, 22)
+  Wire.begin(); 
+  if (!aht1.begin(&Wire)) {
+    Serial.println("Nie znaleziono pierwszego czujnika (Wire)!");
+  } else {
+    Serial.println("Pierwszy czujnik OK");
+  }
+
+  // Inicjalizacja drugiej magistrali I2C na pinach 17 i 16
+  Wire1.begin(I2C2_SDA, I2C2_SCL);
+  if (!aht2.begin(&Wire1)) {
+    Serial.println("Nie znaleziono drugiego czujnika (Wire1)!");
+  } else {
+    Serial.println("Drugi czujnik OK");
+  }
+}
+
+void loop() {
+  sensors_event_t hum1, temp1;
+  sensors_event_t hum2, temp2;
+
+  // Odczyt z pierwszego czujnika
+  aht1.getEvent(&hum1, &temp1);
+  // Odczyt z drugiego czujnika
+  aht2.getEvent(&hum2, &temp2);
+
+  Serial.println("--- Pomiary ---");
+  Serial.printf("Czujnik 1 -> Temp: %.2f C, Wilg: %.2f %%\n", temp1.temperature, hum1.relative_humidity);
+  Serial.printf("Czujnik 2 -> Temp: %.2f C, Wilg: %.2f %%\n", temp2.temperature, hum2.relative_humidity);
+  
+  delay(2000);
+}

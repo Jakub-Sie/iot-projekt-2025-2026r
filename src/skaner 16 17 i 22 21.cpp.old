@@ -1,0 +1,50 @@
+#include <Arduino.h>
+#include <Wire.h>
+
+void scanBus(TwoWire &bus, const char* busName, int sda, int scl) {
+  Serial.printf("\n--- Skanowanie magistrali %s (SDA:%d, SCL:%d) ---\n", busName, sda, scl);
+  byte error, address;
+  int nDevices = 0;
+
+  for (address = 1; address < 127; address++) {
+    bus.beginTransmission(address);
+    error = bus.endTransmission();
+
+    if (error == 0) {
+      Serial.printf("ZNALAZŁEM urządzenie pod adresem: 0x%02X\n", address);
+      nDevices++;
+    } else if (error == 4) {
+      Serial.printf("Błąd krytyczny pod adresem 0x%02X\n", address);
+    }
+  }
+
+  if (nDevices == 0) {
+    Serial.printf("Brak urządzeń na magistrali %s\n", busName);
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  while (!Serial);
+  delay(2000);
+
+  Serial.println("\n=== TEST MAGISTRAL I2C ===");
+
+  // Inicjalizacja pierwszej magistrali (standard)
+  Wire.begin(21, 22);
+  scanBus(Wire, "Wire (21/22)", 21, 22);
+
+  // Inicjalizacja drugiej magistrali (Twoja specjalna)
+  // Używamy Wire1, żeby nie gryzło się z Wire
+  Wire1.begin(16, 17);
+  scanBus(Wire1, "Wire1 (16/17)", 16, 17);
+
+  Serial.println("\nSkanowanie zakończone. Czekam 10 sekund...");
+}
+
+void loop() {
+  delay(10000);
+  // Ponowne skanowanie w pętli
+  scanBus(Wire, "Wire (21/22)", 21, 22);
+  scanBus(Wire1, "Wire1 (16/17)", 16, 17);
+}
