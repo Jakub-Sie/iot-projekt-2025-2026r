@@ -42,7 +42,7 @@ float bus1_ina3221_ch2_v = 0.0;
 float bus1_ina3221_ch3_v = 0.0;
 
 //FLAGI
-bool byloKrecone = false;
+bool errorKrecenia = false;
 
 //Piny
 const int restartKrecenia = 15;
@@ -104,14 +104,12 @@ void setup() {
   if (!ina226_0.begin()) {
     Serial.println("Blad: Nie znaleziono INA226 (0x40) na Wire!");
   } else {
-    ina226_0.setMaxCurrentShunt(20, 0.002);
     Serial.println("INA226 (0x40) na Wire OK");
   }
 
   if (!ina226_1.begin()) {
     Serial.println("Blad: Nie znaleziono INA226 (0x41) na Wire!");
   } else {
-    ina226_1.setMaxCurrentShunt(20, 0.002);
     Serial.println("INA226 (0x41) na Wire OK");
   }
 
@@ -137,7 +135,6 @@ void setup() {
   if (!ina226_2.begin()) {
     Serial.println("Blad: Nie znaleziono INA226 (0x40) na Wire1!");
   } else {
-    ina226_2.setMaxCurrentShunt(20, 0.002);
     Serial.println("INA226 (0x40) na Wire1 OK");
   }
 
@@ -189,7 +186,7 @@ void loop() {
   // ========================================================
 
   if (digitalRead(restartKrecenia) == LOW) {
-    byloKrecone = false;
+    errorKrecenia = false;
   }
 
   // ========================================================
@@ -200,8 +197,8 @@ void loop() {
   Serial.println("        --- ODCZYT DANYCH ---");
   Serial.println("===================================");
   
-  Serial.print("Flaga 'byloKrecone': "); 
-  Serial.println(byloKrecone ? "TAK" : "NIE"); 
+  Serial.print("Flaga 'errorKrecenia': "); 
+  Serial.println(errorKrecenia ? "TAK" : "NIE"); 
   Serial.println("-----------------------------------");
 
   // Wypisywanie dla Magistrali 0
@@ -234,14 +231,14 @@ void loop() {
   digitalWrite(gitPiN, LOW);
   delay(1000);
 
-  if (!byloKrecone && bus0_ina3221_ch2_v > 12) {
+  if (!errorKrecenia && bus0_ina3221_ch2_v > 12) {
       digitalWrite(errorPin, HIGH);
       delay(1000);
       digitalWrite(errorPin, LOW);
       delay(1000);
   }
 
-  if (byloKrecone) {
+  if (errorKrecenia) {
     digitalWrite(errorPin, HIGH);
   } else {
     digitalWrite(errorPin, LOW);
@@ -249,7 +246,7 @@ void loop() {
 
   // --- Sekcja sterowania agregatem ---
 
-  if (!byloKrecone && bus0_ina3221_ch1_v < 12.2 && bus0_ina3221_ch1_v > 0) {
+  if (!errorKrecenia && bus0_ina3221_ch1_v < 12.2 && bus0_ina3221_ch1_v > 0) {
 
     digitalWrite(gitPiN, HIGH);
 
@@ -281,7 +278,7 @@ void loop() {
     if (bus0_ina3221_ch2_v > 12.5) {
       Serial.println("Działa!");
     } else {
-        byloKrecone = true; 
+        errorKrecenia = true; 
         Serial.println("ALARM: Agregat nie odpalił po 5 próbach!");
     }
   }
